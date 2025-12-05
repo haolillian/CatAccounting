@@ -1,4 +1,4 @@
-// Cat Island - script.js
+// Cat Island - script.js (日期修復版)
 (function(){
   // --- Config ---
   const STORAGE_KEYS = {EXPENSES:'cat_island_expenses', PLAYER:'cat_island_player'};
@@ -7,6 +7,16 @@
   const BUDGET_KEY = 'cat_island_budget';
   const BASE_EXP = 5;
   const NOTE_BONUS = 2;
+
+  // --- Helper: Get Local Date String (YYYY-MM-DD) ---
+  // 修復重點：原本使用 toISOString() 會抓到 UTC 時間，導致亞洲時區早上會變成「昨天」
+  function getLocalToday(){
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   // budget helper
   function loadBudget(){
@@ -23,7 +33,7 @@
     if(budgetEl) budgetEl.textContent = BUDGET;
     renderAll();
   }
-  let BUDGET = loadBudget(); // 可修改預設預算
+  let BUDGET = loadBudget();
 
   // --- Default player ---
   const defaultPlayer = {
@@ -34,7 +44,6 @@
   };
 
   // --- Breeds & Shop ---
-  // default breeds (id, display name, price in coins)
   const BREEDS = [
     {id:'sphynx', name:'無毛貓', price:0},
     {id:'persian', name:'波斯貓', price:15},
@@ -55,8 +64,8 @@
   const categoryInput = el('category');
   const noteInput = el('note');
   const expenseList = el('expense-list');
-  const dateInput = el('date-input');
-  const viewDateEl = el('view-date');
+  const dateInput = el('date-input'); // 日期輸入框
+  const viewDateEl = el('view-date'); // 篩選日期
   const viewAllEl = el('view-all');
   const playerLevel = el('player-level');
   const playerCoins = el('player-coins');
@@ -83,48 +92,42 @@
   expenses = loadExpenses();
   let manifestData = null;
 
-  // load manifest to discover breeds/images
   function loadManifest(){
     return fetch('assets/manifest.json').then(r=>{
       if(!r.ok) throw new Error('manifest not found');
       return r.json();
     }).then(json=>{
       manifestData = json;
-      // build BREEDS list from manifest if available
       const names = Object.keys(manifestData.breeds || {});
       if(names.length>0){
-        // assign prices: first free, others incremental
         const prices = [0,10,15,20,25,30,40,50];
         const arr = names.map((n,i)=>({id:n, name: manifestData.breeds[n].displayName || n, price: prices[i] || 50}));
-        // override BREEDS
         window.BREEDS_RUNTIME = arr;
       }
     }).catch(err=>{
       console.warn('manifest load failed', err);
     });
   }
-  // start loading manifest (async)
+  
   loadManifest().finally(()=>{
-    // after manifest attempt, initialize owned/current
     ownedBreeds = loadOwnedBreeds();
     currentBreed = loadCurrentBreed();
     renderAll();
   });
-  // load owned breeds and current breed
+  
   let ownedBreeds = loadOwnedBreeds();
   let currentBreed = loadCurrentBreed();
-  // set default date input to today
-  if(dateInput) dateInput.value = new Date().toISOString().slice(0,10);
-  // set month input to this month
-  if(monthInput) monthInput.value = new Date().toISOString().slice(0,7);
-  // set view date default
-  if(viewDateEl) viewDateEl.value = new Date().toISOString().slice(0,10);
+
+  // --- 日期初始化修正 ---
+  // 使用 getLocalToday() 確保預設是本地的「今天」
+  if(dateInput) dateInput.value = getLocalToday();
+  if(monthInput) monthInput.value = getLocalToday().slice(0,7); // YYYY-MM
+  if(viewDateEl) viewDateEl.value = getLocalToday();
+  
   if(viewAllEl) viewAllEl.checked = false;
   if(viewDateEl) viewDateEl.addEventListener('change', ()=> renderAll());
   if(viewAllEl) viewAllEl.addEventListener('change', ()=> renderAll());
-  renderAll();
-
-  // month change updates report
+  
   if(monthInput){
     monthInput.addEventListener('change', ()=> renderMonthlyReport());
   }
@@ -137,7 +140,6 @@
   if(navReport) navReport.addEventListener('click', ()=> showPage('report'));
   if(navHome) navHome.addEventListener('click', ()=> showPage('home'));
 
-  // budget events
   if(setBudgetBtn){
     setBudgetBtn.addEventListener('click', ()=>{
       const v = Number(budgetInput.value);
@@ -157,7 +159,6 @@
   function loadCurrentBreed(){ try{ const raw = localStorage.getItem(CURRENT_BREED_KEY); return raw || getAvailableBreeds()[0].id; }catch(e){ return getAvailableBreeds()[0].id; } }
   function saveCurrentBreed(id){ localStorage.setItem(CURRENT_BREED_KEY, id); }
 
-  // helper: get available breeds (manifest-driven if present)
   function getAvailableBreeds(){
     return window.BREEDS_RUNTIME || BREEDS;
   }
@@ -169,18 +170,29 @@
     if(!amount || amount <= 0) return alert('請輸入正確的金額');
     const category = categoryInput.value;
     const note = noteInput.value.trim();
-    // read date from dateInput
+    // 取得當前輸入框的日期
     const dateVal = dateInput && dateInput.value ? dateInput.value : null;
     addExpense({amount, category, note, dateVal});
+    
     expenseForm.reset();
+    
+    // 修復重點：reset() 會把日期清空，這裡強制設回「今天」，
+    // 避免使用者連續輸入時，第二筆資料變成 UTC 導致的錯誤日期
+    if(dateInput) dateInput.value = getLocalToday();
   });
 
   clearBtn.addEventListener('click', ()=>{
     if(!confirm('確認要重設所有資料嗎？(localStorage 會被清除)')) return;
     localStorage.removeItem(STORAGE_KEYS.EXPENSES);
     localStorage.removeItem(STORAGE_KEYS.PLAYER);
+    // 重設後也要更新狀態
     expenses = [];
     player = {...defaultPlayer};
+    ownedBreeds = [getAvailableBreeds()[0].id];
+    currentBreed = ownedBreeds[0];
+    saveOwnedBreeds(ownedBreeds);
+    saveCurrentBreed(currentBreed);
+    
     renderAll();
   });
 
@@ -208,19 +220,17 @@
   }
 
   function addExpense({amount, category, note, dateVal}){
-    // dateVal is YYYY-MM-DD or null
-    // Store date as local YYYY-MM-DD string to avoid timezone shifts when using toISOString()
-    const day = dateVal ? dateVal : new Date().toISOString().slice(0,10);
+    // 修復重點：如果 dateVal 為空，使用 getLocalToday() 而不是 toISOString()
+    const day = dateVal ? dateVal : getLocalToday();
+    
     const item = {id:Date.now(), amount, category, note, date: day};
     expenses.unshift(item);
     saveExpenses();
 
-    // update player (EXP & coins)
     const expGain = BASE_EXP + (note ? NOTE_BONUS : 0);
     player.currentExp += expGain;
     player.coins += 1;
 
-    // handle level up(s)
     let leveled = false;
     while(player.currentExp >= player.expToNextLevel){
       player.currentExp -= player.expToNextLevel;
@@ -231,7 +241,6 @@
     savePlayer();
     if(leveled) showLevelUp();
 
-    // update mood & dialogue
     const total = getTotalSpent();
     const mood = determineMood(total, BUDGET);
     const shortMsg = generateDialogueOnExpense(amount, mood, player);
@@ -250,11 +259,11 @@
   }
 
   function getTodaySpent(){
-    const today = new Date().toISOString().slice(0,10);
+    // 修復重點：計算今日花費時，也必須使用本地時間
+    const today = getLocalToday();
     return expenses.reduce((s,it)=>{ return s + (it.date.slice(0,10)===today ? Number(it.amount) : 0); },0);
   }
 
-  // monthly totals by category for a given YYYY-MM string
   function getMonthlyTotals(month){
     const totals = {};
     let totalAll = 0;
@@ -270,7 +279,6 @@
   function determineMood(total, budget){
     const b = (typeof budget === 'number' && budget > 0) ? budget : BUDGET;
     const ratio = b > 0 ? (total / b) : 0;
-    // mapping per request: 0-20% happy, 20-40% relaxed, 41-60% confused, 61-80% surprised, 81-100% sad, >100% angry
     if(ratio <= 0.2) return {m:'開心', key:'happy'};
     if(ratio <= 0.4) return {m:'放鬆', key:'relaxed'};
     if(ratio <= 0.6) return {m:'疑惑', key:'confused'};
@@ -294,12 +302,13 @@
     totalSpentEl.textContent = total.toFixed(2);
     todaySpentEl.textContent = today.toFixed(2);
 
-    // mood & cat appearance (use editable BUDGET)
+    // mood & cat appearance
     const mood = determineMood(total, BUDGET);
     catMood.textContent = mood.m;
-    // choose appearance based on current breed and mood
-  const appearance = getCatAppearance(loadCurrentBreed(), mood.key);
-    // render main cat image using safer DOM operations
+    
+    // 使用原本的圖片邏輯 (不修改)
+    const appearance = getCatAppearance(loadCurrentBreed(), mood.key);
+    
     if(catImage){
       catImage.innerHTML = '';
       const img = document.createElement('img');
@@ -307,7 +316,6 @@
       img.alt = 'cat';
       catImage.appendChild(img);
     }
-    // render accessory at top
     if(topCat){
       topCat.innerHTML = '';
       if(appearance.accessory){
@@ -318,18 +326,22 @@
       }
     }
 
-    // render list (with edit/delete)
+    // Render List
     expenseList.innerHTML = '';
-    // decide whether to filter by selected date
     const showAll = viewAllEl ? viewAllEl.checked : true;
-    const selectedDate = viewDateEl && viewDateEl.value ? viewDateEl.value : new Date().toISOString().slice(0,10);
+    
+    // 修復重點：列表篩選預設值也要用本地時間，否則會篩到「昨天」
+    const selectedDate = viewDateEl && viewDateEl.value ? viewDateEl.value : getLocalToday();
+    
     const filtered = showAll ? expenses : expenses.filter(it => it.date.slice(0,10) === selectedDate);
+    
     if(filtered.length === 0){
       const li = document.createElement('li');
       li.textContent = showAll ? '目前沒有支出，快新增一筆吧～' : `在 ${selectedDate} 沒有紀錄`;
       li.style.color = '#888';
+      li.style.textAlign = 'center';
       expenseList.appendChild(li);
-    }else{
+    } else {
       filtered.forEach(it=>{
         const li = document.createElement('li');
         li.className = 'expense-item';
@@ -350,16 +362,15 @@
         amount.className = 'expense-amount';
         amount.textContent = '-' + Number(it.amount).toFixed(2);
 
-        // actions
         const actions = document.createElement('div');
         actions.className = 'item-actions';
         const editBtn = document.createElement('button');
         editBtn.className = 'btn-edit';
-        editBtn.textContent = '編輯';
+        editBtn.textContent = '✎';
         editBtn.addEventListener('click', ()=> editExpense(it.id));
         const delBtn = document.createElement('button');
         delBtn.className = 'btn-delete';
-        delBtn.textContent = '刪除';
+        delBtn.textContent = '✕';
         delBtn.addEventListener('click', ()=> deleteExpense(it.id));
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
@@ -373,12 +384,10 @@
       });
     }
 
-    // render shop and report after list
     renderShop();
     renderMonthlyReport();
   }
 
-  // --- Shop UI ---
   function renderShop(){
     if(!shopListEl) return;
     shopListEl.innerHTML = '';
@@ -390,7 +399,7 @@
       const left = document.createElement('div'); left.className='breed-left';
       const thumb = document.createElement('img'); thumb.className = 'breed-thumb';
       thumb.alt = b.name;
-      // resolve thumbnail from manifest or fallback
+      // 保持原本的圖片路徑邏輯
       thumb.src = getBreedThumbnail(b.id);
       const nameEl = document.createElement('div'); nameEl.className='breed-name'; nameEl.textContent = b.name;
       left.appendChild(thumb);
@@ -418,23 +427,19 @@
     });
   }
 
-  // helper: return a thumbnail path for a breed id (prefer manifest happy image)
   function getBreedThumbnail(breedId){
     if(manifestData && manifestData.breeds && manifestData.breeds[breedId]){
       const imgs = manifestData.breeds[breedId].images || {};
-      // prefer 'happy' otherwise first available
       if(imgs.happy) return imgs.happy;
       const first = Object.values(imgs)[0];
       if(first) return first;
     }
-    // fallback naming pattern
     return `assets/${breedId}_happy.svg`;
   }
 
-  // --- Monthly report & Pie chart ---
   function renderMonthlyReport(){
     if(!monthInput) return;
-    const month = monthInput.value || new Date().toISOString().slice(0,7);
+    const month = monthInput.value || getLocalToday().slice(0,7);
     const {totals, totalAll} = getMonthlyTotals(month);
     if(monthlyTotalEl) monthlyTotalEl.textContent = totalAll.toFixed(2);
     drawPieChart(pieCanvas, totals);
@@ -445,7 +450,14 @@
     const ctx = canvas.getContext('2d');
     const entries = Object.entries(data);
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    if(entries.length===0) return;
+    if(entries.length===0){
+       // 簡單繪製空狀態
+       ctx.fillStyle = '#ccc';
+       ctx.font = '14px sans-serif';
+       ctx.textAlign = 'center';
+       ctx.fillText('無資料', canvas.width/2, canvas.height/2);
+       return;
+    }
     const total = entries.reduce((s,[k,v])=>s+v,0);
     let start = 0;
     const colors = ['#FFB6D9','#FFD27A','#BFE9FF','#C3FFD8','#E6CCFF','#FFD6B0'];
@@ -456,15 +468,16 @@
       ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start*2*Math.PI,end*2*Math.PI); ctx.closePath();
       ctx.fillStyle = colors[i % colors.length]; ctx.fill();
       // label
-      const mid = (start+end)/2;
-      const lx = cx + Math.cos(mid*2*Math.PI)*(r*0.6);
-      const ly = cy + Math.sin(mid*2*Math.PI)*(r*0.6);
-      ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.fillText(k, lx-10, ly);
+      if(slice > 0.05){ // 佔比太小不顯示文字
+        const mid = (start+end)/2;
+        const lx = cx + Math.cos(mid*2*Math.PI)*(r*0.6);
+        const ly = cy + Math.sin(mid*2*Math.PI)*(r*0.6);
+        ctx.fillStyle = '#333'; ctx.font = '12px sans-serif'; ctx.textAlign='center'; ctx.fillText(k, lx, ly);
+      }
       start = end;
     });
   }
 
-  // delete expense
   function deleteExpense(id){
     if(!confirm('確定要刪除此筆支出嗎？')) return;
     expenses = expenses.filter(it => it.id !== id);
@@ -473,11 +486,9 @@
     showDialogue('已刪除支出～', 2000);
   }
 
-  // start inline edit
   function editExpense(id){
     const idx = expenses.findIndex(it=>it.id===id);
     if(idx === -1) return;
-    // render list with inputs for this id
     renderListEditing(id);
   }
 
@@ -487,10 +498,6 @@
     expenses[idx].amount = Number(newAmount);
     expenses[idx].category = newCategory;
     expenses[idx].note = newNote;
-      if(arguments[4]){
-        // expecting a YYYY-MM-DD value from the edit date input; store as-is to avoid TZ issues
-        expenses[idx].date = arguments[4];
-      }
     saveExpenses();
     renderAll();
     showDialogue('已更新支出', 1800);
@@ -503,13 +510,11 @@
     if(!cd) return;
     cd.textContent = text;
     if(duration>0){
-      setTimeout(()=>{ cd.textContent=''; }, duration);
+      setTimeout(()=>{ if(cd.textContent===text) cd.textContent=''; }, duration);
     }
   }
 
   function generateDialogueOnExpense(amount, mood, player){
-    // richer dialogue based on amount and mood/level
-    // mood here contains key (happy, relaxed, confused, surprised, sad, angry)
     const key = mood.key || mood;
     const suggestions = {
       happy: '今天花得漂亮，但別忘了存一點零用錢喵～',
@@ -530,6 +535,7 @@
       const li = document.createElement('li');
       li.className = 'expense-item';
       if(it.id === editId){
+        // Editing Mode
         const meta = document.createElement('div');
         meta.className = 'expense-meta';
         const catSelect = document.createElement('select');
@@ -552,12 +558,13 @@
         li.appendChild(meta);
         li.appendChild(right);
       } else {
+        // Normal Mode
         const meta = document.createElement('div'); meta.className='expense-meta';
         const cat = document.createElement('div'); cat.className='expense-cat'; cat.textContent=it.category;
         const note = document.createElement('div'); note.className='expense-note'; note.textContent = it.note || new Date(it.date).toLocaleString();
         meta.appendChild(cat); meta.appendChild(note);
         const right = document.createElement('div'); right.className='expense-right'; const amount = document.createElement('div'); amount.className='expense-amount'; amount.textContent='-'+Number(it.amount).toFixed(2);
-        const actions = document.createElement('div'); actions.className='item-actions'; const editBtn = document.createElement('button'); editBtn.className='btn-edit'; editBtn.textContent='編輯'; editBtn.addEventListener('click', ()=> editExpense(it.id)); const delBtn=document.createElement('button'); delBtn.className='btn-delete'; delBtn.textContent='刪除'; delBtn.addEventListener('click', ()=> deleteExpense(it.id)); actions.appendChild(editBtn); actions.appendChild(delBtn);
+        const actions = document.createElement('div'); actions.className='item-actions'; const editBtn = document.createElement('button'); editBtn.className='btn-edit'; editBtn.textContent='✎'; editBtn.addEventListener('click', ()=> editExpense(it.id)); const delBtn=document.createElement('button'); delBtn.className='btn-delete'; delBtn.textContent='✕'; delBtn.addEventListener('click', ()=> deleteExpense(it.id)); actions.appendChild(editBtn); actions.appendChild(delBtn);
         right.appendChild(amount); right.appendChild(actions);
         li.appendChild(meta); li.appendChild(right);
       }
@@ -565,53 +572,40 @@
     });
   }
 
-  // Appearance based on level & mood
-  // get image path by breedId and moodKey
   function getCatAppearance(breedId, moodKey){
-    // prefer manifest data when available
     let img = '';
     if(manifestData && manifestData.breeds && manifestData.breeds[breedId]){
       const imgs = manifestData.breeds[breedId].images || {};
       img = imgs[moodKey] || Object.values(imgs)[0] || '';
     }
-    // fallback to conventional path
     if(!img){ img = `assets/${breedId}_${moodKey}.svg`; }
-
-    // accessory by player level (load player from saved state)
     const lvl = player.level || 1;
     let accessory = '';
     if(lvl >= 8) accessory = 'assets/accessory_sunglasses.svg';
     else if(lvl >=5) accessory = 'assets/accessory_bow.svg';
     else if(lvl >=3) accessory = 'assets/accessory_cap.svg';
-
     return {img, accessory};
   }
 
-  // Simple single-page navigation: show only panels for a named page
   function showPage(name){
     const panels = document.querySelectorAll('.panel');
     panels.forEach(p=>{
       const pd = p.getAttribute('data-page');
       if(!pd){
-        // panels without data-page are considered part of "home"
         p.classList.toggle('hidden', name !== 'home');
       } else {
         p.classList.toggle('hidden', pd !== name);
       }
     });
-    // update hash for deep-link
     try{ history.replaceState(null, '', name==='home' ? location.pathname : `#${name}`); }catch(e){}
   }
 
-  // on load: wire back buttons and initial route
   function initRouting(){
     document.querySelectorAll('.btn-back').forEach(b=> b.addEventListener('click', ()=> showPage('home')));
-    // initial route from hash
     const h = location.hash.replace('#','');
     if(h==='shop' || h==='report') showPage(h); else showPage('home');
   }
-  // attach and run immediately
+
   document.addEventListener('DOMContentLoaded', initRouting);
-  initRouting();
 
 })();
