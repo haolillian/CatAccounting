@@ -14,7 +14,10 @@ body{font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto S
 .nav-buttons{display:flex;gap:8px;align-items:center;margin-left:12px}
 .nav-buttons button{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:6px 10px;border-radius:10px;cursor:pointer}
 .nav-buttons button.ghost{color:var(--muted)}
+
+/* 修改 Container，讓它可以適應不同的面板 */
 .container{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:18px;max-width:1400px;margin:14px auto}
+
 .panel{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(17,17,17,0.04)}
 .player-panel{height:auto; min-height: 180px;}
 .player-panel h3,.form-panel h3,.list-panel h3{margin:0 0 8px 0}
@@ -56,24 +59,27 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
 .expense-amount{font-weight:700;color:#333}
 .footer{max-width:1400px;margin:10px auto;padding:12px;color:var(--muted);text-align:center}
 
-.shop-panel .shop-note{font-size:13px;color:var(--muted);margin-top:8px}
-/* 修正了這裡的選擇器，原本少了一個點 */
-.shop-panel{
-  max-width:1200px;
-  margin:20px auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+/* --- 重點修改：讓商店和報表跨欄並置中 --- */
+.shop-panel, .report-panel {
+  grid-column: 1 / -1; /* 強制跨越所有欄位 */
+  width: 100%;
+  max-width: 600px;    /* 限制最大寬度，比較好看 */
+  margin: 20px auto;   /* 上下20px，左右自動置中 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
 .shop-panel #shop-list{width:100%;}
-.shop-item{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:12px;background:#fffaf2; margin-bottom: 10px;}
+.shop-item{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:12px;background:#fffaf2; margin-bottom: 10px; width: 100%;}
 .shop-item .breed-left{display:flex;align-items:center;gap:14px}
-.shop-item .breed-thumb{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid rgba(0,0,0,0.04); display:flex; align-items:center; justify-content:center; background: #fff; font-size: 30px;}
+.shop-item .breed-thumb{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid rgba(0,0,0,0.04); display:flex; align-items:center; justify-content:center; background: #fff;}
 .shop-item .breed-name{font-weight:700;font-size:16px}
 .shop-item .breed-actions{display:flex;gap:8px}
 
-.report-panel canvas{max-width:100%;background:#fff;border-radius:8px;padding:8px;margin-top:8px}
-.report-controls{display:flex;gap:8px;align-items:center}
+/* 報表樣式優化 */
+.report-panel canvas{max-width:100%;background:#fff;border-radius:8px;padding:8px;margin-top:20px}
+.report-controls{display:flex;gap:8px;align-items:center; width: 100%; justify-content: center;}
 .monthly-total{margin-top:8px;font-weight:700}
 
 @media (max-width:820px){
@@ -81,8 +87,8 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
   .cat-image{font-size:68px}
 }
 
-/* Simple page navigation helpers */
+/* Page Helpers */
 .hidden{display:none !important}
-.page-header{display:flex;align-items:center;gap:12px; margin-bottom: 15px;}
+.page-header{display:flex;align-items:center;gap:12px; margin-bottom: 15px; width: 100%;}
 .page-header .btn-back{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:8px}
 .page-header h3{margin:0}
