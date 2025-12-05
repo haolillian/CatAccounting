@@ -56,6 +56,8 @@
   const noteInput = el('note');
   const expenseList = el('expense-list');
   const dateInput = el('date-input');
+  const viewDateEl = el('view-date');
+  const viewAllEl = el('view-all');
   const playerLevel = el('player-level');
   const playerCoins = el('player-coins');
   const currentExpEl = el('current-exp');
@@ -115,6 +117,11 @@
   if(dateInput) dateInput.value = new Date().toISOString().slice(0,10);
   // set month input to this month
   if(monthInput) monthInput.value = new Date().toISOString().slice(0,7);
+  // set view date default
+  if(viewDateEl) viewDateEl.value = new Date().toISOString().slice(0,10);
+  if(viewAllEl) viewAllEl.checked = false;
+  if(viewDateEl) viewDateEl.addEventListener('change', ()=> renderAll());
+  if(viewAllEl) viewAllEl.addEventListener('change', ()=> renderAll());
   renderAll();
 
   // month change updates report
@@ -316,13 +323,17 @@
 
     // render list (with edit/delete)
     expenseList.innerHTML = '';
-    if(expenses.length === 0){
+    // decide whether to filter by selected date
+    const showAll = viewAllEl ? viewAllEl.checked : true;
+    const selectedDate = viewDateEl && viewDateEl.value ? viewDateEl.value : new Date().toISOString().slice(0,10);
+    const filtered = showAll ? expenses : expenses.filter(it => it.date.slice(0,10) === selectedDate);
+    if(filtered.length === 0){
       const li = document.createElement('li');
-      li.textContent = '目前沒有支出，快新增一筆吧～';
+      li.textContent = showAll ? '目前沒有支出，快新增一筆吧～' : `在 ${selectedDate} 沒有紀錄`;
       li.style.color = '#888';
       expenseList.appendChild(li);
     }else{
-      expenses.forEach(it=>{
+      filtered.forEach(it=>{
         const li = document.createElement('li');
         li.className = 'expense-item';
         const meta = document.createElement('div');
