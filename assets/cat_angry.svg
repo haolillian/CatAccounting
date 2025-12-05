@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="100%" height="100%" rx="24" fill="#fff2f6"/>
+  <g transform="translate(40,40)">
+    <circle cx="80" cy="80" r="60" fill="#FFDAD4" stroke="#FF7A7A" stroke-width="4"/>
+    <path d="M50 60 L70 70" stroke="#6d2f2f" stroke-width="6" stroke-linecap="round"/>
+    <path d="M110 70 L130 60" stroke="#6d2f2f" stroke-width="6" stroke-linecap="round"/>
+    <path d="M60 110 Q80 90 100 110" stroke="#8b2f2f" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <text x="30" y="30" font-size="12" fill="#b23b3b">生氣！</text>
+  </g>
+</svg>

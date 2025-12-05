@@ -186,9 +186,14 @@
     catMood.textContent = mood.m;
     // choose appearance based on level and mood
     const appearance = getCatAppearance(player, mood);
-    catImage.textContent = appearance.emoji;
-    // optional accessory shown near top
-    topCat.textContent = appearance.topEmoji || appearance.emoji;
+    // render main cat image
+    if(catImage){
+      catImage.innerHTML = `<img src="${appearance.img}" alt="cat" />`;
+    }
+    // render accessory at top
+    if(topCat){
+      topCat.innerHTML = appearance.accessory ? `<img src="${appearance.accessory}" alt="accessory" />` : '';
+    }
 
     // render list (with edit/delete)
     expenseList.innerHTML = '';
@@ -332,19 +337,19 @@
 
   // Appearance based on level & mood
   function getCatAppearance(player, mood){
-    // choose base emoji by level
+    // choose image by mood and accessory by level
+    const assets = 'assets/';
+    let img = assets + 'cat_happy.svg';
+    if(mood.m === '生氣') img = assets + 'cat_angry.svg';
+    if(mood.m === '普通 / 擔心') img = assets + 'cat_worried.svg';
+
     const lvl = player.level || 1;
-    let emoji = '😺';
-    let top = '';
-    if(lvl >= 8) { emoji = '😼'; top = '🕶️'; }
-    else if(lvl >=5) { emoji = '😻'; top = '🎀'; }
-    else if(lvl >=3) { emoji = '😸'; top = '🧢'; }
+    let accessory = '';
+    if(lvl >= 8) accessory = assets + 'accessory_sunglasses.svg';
+    else if(lvl >=5) accessory = assets + 'accessory_bow.svg';
+    else if(lvl >=3) accessory = assets + 'accessory_cap.svg';
 
-    // mood overlays (pick small change in dialogue instead of complex image layering)
-    if(mood.m === '生氣') emoji = '😾';
-    if(mood.m === '普通 / 擔心') emoji = '😿';
-
-    return {emoji, topEmoji: top};
+    return {img, accessory};
   }
 
 })();

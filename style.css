@@ -26,6 +26,8 @@ body{font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto S
 .budget-edit input{width:140px;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)}
 .cat-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
 .cat-image{font-size:88px}
+.cat-image img{width:180px;height:180px;object-fit:contain;border-radius:12px}
+.top-cat img{width:36px;height:36px;object-fit:contain}
 .cat-mood{font-weight:700;color:#444}
 .cat-dialogue{font-size:14px;color:#555;background:linear-gradient(90deg,#fff7fb,#fffaf0);padding:8px;border-radius:10px;min-height:36px;display:flex;align-items:center;justify-content:center}
 .levelup-msg{color:var(--accent);font-weight:700;min-height:20px}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <rect width="100%" height="100%" rx="24" fill="#fffaf0"/>
+  <g transform="translate(40,40)">
+    <circle cx="80" cy="80" r="60" fill="#FFF2AC" stroke="#FFD27A" stroke-width="4"/>
+    <ellipse cx="60" cy="75" rx="7" ry="11" fill="#5b4036"/>
+    <ellipse cx="100" cy="75" rx="7" ry="11" fill="#5b4036"/>
+    <path d="M60 105 Q80 95 100 105" stroke="#8b5e3c" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <text x="40" y="30" font-size="12" fill="#7b7b8a">唉…</text>
+  </g>
+</svg>
