@@ -1,4 +1,4 @@
-// Cat Island - script.js
+// Cat Island - script.js (日期顯示修正版)
 (function(){
   // --- Config ---
   const STORAGE_KEYS = {EXPENSES:'cat_island_expenses', PLAYER:'cat_island_player'};
@@ -15,13 +15,6 @@
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  }
-
-  // --- Helper: Format Full Time ---
-  function formatTime(timestamp){
-    if(!timestamp) return '';
-    const d = new Date(timestamp);
-    return d.toLocaleString('zh-TW', {hour12: false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
   }
 
   // budget helper
@@ -163,9 +156,15 @@
     const category = categoryInput.value;
     const note = noteInput.value.trim();
     const dateVal = dateInput && dateInput.value ? dateInput.value : null;
+    
+    // 這裡保存當下的日期
+    const savedDate = dateVal; 
+
     addExpense({amount, category, note, dateVal});
     expenseForm.reset();
-    if(dateInput) dateInput.value = getLocalToday();
+    
+    // 【優化】：新增完後，把日期設回剛剛選的日期（方便連續記帳），而不是強制跳回今天
+    if(dateInput) dateInput.value = savedDate || getLocalToday();
   });
 
   clearBtn.addEventListener('click', ()=>{
@@ -196,7 +195,7 @@
         category, 
         note, 
         date: day,
-        createdTime: Date.now() // 新增：紀錄當下精確時間
+        createdTime: Date.now() 
     };
     expenses.unshift(item);
     saveExpenses();
@@ -294,11 +293,11 @@
         const meta = document.createElement('div'); meta.className = 'expense-meta';
         const cat = document.createElement('div'); cat.className = 'expense-cat'; cat.textContent = it.category;
         
-        // --- 顯示邏輯修改：優先顯示時間 ---
+        // --- 修正：優先顯示日期 (it.date) ---
         let displayNote = it.note;
         if(!displayNote){
-            if(it.createdTime) displayNote = formatTime(it.createdTime);
-            else displayNote = it.date; 
+            // 如果沒寫備註，就顯示日期 (例如 2024-12-06)，確保符合使用者選的時間
+            displayNote = it.date; 
         }
 
         const note = document.createElement('div'); note.className = 'expense-note'; 
@@ -318,7 +317,6 @@
     }
     renderShop();
     
-    // 確保報表切換時更新
     if(!document.querySelector('.report-panel').classList.contains('hidden')){
         renderMonthlyReport();
     }
@@ -406,7 +404,6 @@
     const ctx = canvas.getContext('2d');
     const entries = Object.entries(data);
     
-    // 鎖定尺寸
     canvas.width = 300; 
     canvas.height = 200;
 
@@ -496,8 +493,7 @@
         
         let displayNote = it.note;
         if(!displayNote){
-            if(it.createdTime) displayNote = formatTime(it.createdTime);
-            else displayNote = it.date; 
+            displayNote = it.date; 
         }
 
         const note = document.createElement('div'); note.className='expense-note'; note.textContent = displayNote;
@@ -511,7 +507,6 @@
     });
   }
   
-  // --- 修正報表切換 ---
   function showPage(name){
     const panels = document.querySelectorAll('.panel');
     panels.forEach(p=>{
@@ -519,7 +514,6 @@
       if(!pd){ p.classList.toggle('hidden', name !== 'home'); } else { p.classList.toggle('hidden', pd !== name); }
     });
     
-    // 切換到報表頁面時強制刷新
     if(name === 'report'){
         setTimeout(() => renderMonthlyReport(), 50);
     }
