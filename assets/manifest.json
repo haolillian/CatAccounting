@@ -58,11 +58,11 @@
     "白貓": {
       "displayName": "白貓",
       "images": {
-        "happy": "assets/白貓＿開心.heic",
-        "relaxed": "assets/白貓＿放鬆.HEIC",
-        "confused": "assets/白貓＿疑惑.HEIC",
-        "surprised": "assets/白貓＿驚訝.heic",
-        "sad": "assets/白貓＿難過.heic",
+        "happy": "assets/白貓＿開心.png",
+        "relaxed": "assets/白貓＿放鬆.png",
+        "confused": "assets/白貓＿疑惑.png",
+        "surprised": "assets/白貓＿驚訝.png",
+        "sad": "assets/白貓＿難過.png",
         "angry": "assets/白貓＿生氣.PNG"
       }
     }
