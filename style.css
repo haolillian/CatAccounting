@@ -14,7 +14,7 @@ body{font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto S
 .nav-buttons{display:flex;gap:8px;align-items:center;margin-left:12px}
 .nav-buttons button{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:6px 10px;border-radius:10px;cursor:pointer}
 .nav-buttons button.ghost{color:var(--muted)}
-.container{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:18px;max-width:1000px;margin:14px auto}
+.container{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:18px;max-width:1400px;margin:14px auto}
 .panel{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(17,17,17,0.04)}
 .player-panel{height:180px}
 .player-panel h3,.form-panel h3,.list-panel h3{margin:0 0 8px 0}
@@ -54,11 +54,11 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
 .expense-cat{font-weight:700}
 .expense-note{font-size:13px;color:var(--muted)}
 .expense-amount{font-weight:700;color:#333}
-.footer{max-width:1000px;margin:10px auto;padding:12px;color:var(--muted);text-align:center}
+.footer{max-width:1400px;margin:10px auto;padding:12px;color:var(--muted);text-align:center}
 
 .shop-panel .shop-note{font-size:13px;color:var(--muted);margin-top:8px}
-.shop-panel{
-  max-width:880px;
+shop-panel{
+  max-width:1200px;
   margin:20px auto;
   display:flex;
   flex-direction:column;
