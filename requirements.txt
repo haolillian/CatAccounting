@@ -1,1 +1,3 @@
-# This file intentionally left blank to satisfy some CI/build systems
+# Flask + gunicorn so Render can run a Web Service if desired
+Flask==2.3.3
+gunicorn==20.1.0
