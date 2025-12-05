@@ -11,6 +11,9 @@ body{font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto S
 .top-bar{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid rgba(0,0,0,0.05)}
 .title{font-size:20px;font-weight:700;color:var(--accent)}
 .top-cat{font-size:28px}
+.nav-buttons{display:flex;gap:8px;align-items:center;margin-left:12px}
+.nav-buttons button{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:6px 10px;border-radius:10px;cursor:pointer}
+.nav-buttons button.ghost{color:var(--muted)}
 .container{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:18px;max-width:1000px;margin:14px auto}
 .panel{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(17,17,17,0.04)}
 .player-panel{height:180px}

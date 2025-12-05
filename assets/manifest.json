@@ -1,0 +1,70 @@
+{
+  "breeds": {
+    "無毛貓": {
+      "displayName": "無毛貓",
+      "images": {
+        "happy": "assets/無毛貓＿開心.PNG",
+        "relaxed": "assets/無毛貓＿放鬆.PNG",
+        "confused": "assets/無毛貓＿疑惑.PNG",
+        "surprised": "assets/無毛貓＿驚訝.PNG",
+        "sad": "assets/無毛貓＿難過.PNG",
+        "angry": "assets/無毛貓＿生氣.PNG"
+      }
+    },
+    "暹羅貓": {
+      "displayName": "暹羅貓",
+      "images": {
+        "happy": "assets/暹羅貓＿開心.PNG",
+        "relaxed": "assets/暹羅貓＿放鬆.PNG",
+        "confused": "assets/暹羅貓＿疑惑.PNG",
+        "surprised": "assets/暹羅貓＿驚訝.PNG",
+        "sad": "assets/暹羅貓＿難過.PNG",
+        "angry": "assets/暹羅貓＿生氣.jpg"
+      }
+    },
+    "挪威森林貓": {
+      "displayName": "挪威森林貓",
+      "images": {
+        "happy": "assets/挪威森林貓＿開心.PNG",
+        "relaxed": "assets/挪威森林貓＿放鬆.PNG",
+        "confused": "assets/挪威森林貓＿疑惑.PNG",
+        "surprised": "assets/挪威森林貓＿驚訝.PNG",
+        "sad": "assets/挪威森林貓＿難過.PNG",
+        "angry": "assets/挪威森林貓＿生氣.png"
+      }
+    },
+    "小灰貓": {
+      "displayName": "小灰貓",
+      "images": {
+        "happy": "assets/小灰貓＿開心.PNG",
+        "relaxed": "assets/小灰貓＿放鬆.PNG",
+        "confused": "assets/小灰貓＿疑惑.PNG",
+        "surprised": "assets/小灰貓＿驚訝.PNG",
+        "sad": "assets/小灰貓＿難過.PNG",
+        "angry": "assets/小灰貓＿生氣.PNG"
+      }
+    },
+    "豹貓": {
+      "displayName": "豹貓",
+      "images": {
+        "happy": "assets/豹貓＿開心.PNG",
+        "relaxed": "assets/豹貓＿放鬆.PNG",
+        "confused": "assets/豹貓＿疑惑.PNG",
+        "surprised": "assets/豹貓＿驚訝.PNG",
+        "sad": "assets/豹貓＿難過.PNG",
+        "angry": "assets/豹貓＿生氣.PNG"
+      }
+    },
+    "白貓": {
+      "displayName": "白貓",
+      "images": {
+        "happy": "assets/白貓＿開心.heic",
+        "relaxed": "assets/白貓＿放鬆.HEIC",
+        "confused": "assets/白貓＿疑惑.HEIC",
+        "surprised": "assets/白貓＿驚訝.heic",
+        "sad": "assets/白貓＿難過.heic",
+        "angry": "assets/白貓＿生氣.PNG"
+      }
+    }
+  }
+}

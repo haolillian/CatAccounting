@@ -79,6 +79,35 @@
   const budgetInput = el('budget-input');
   const setBudgetBtn = el('set-budget');
   expenses = loadExpenses();
+  let manifestData = null;
+
+  // load manifest to discover breeds/images
+  function loadManifest(){
+    return fetch('assets/manifest.json').then(r=>{
+      if(!r.ok) throw new Error('manifest not found');
+      return r.json();
+    }).then(json=>{
+      manifestData = json;
+      // build BREEDS list from manifest if available
+      const names = Object.keys(manifestData.breeds || {});
+      if(names.length>0){
+        // assign prices: first free, others incremental
+        const prices = [0,10,15,20,25,30,40,50];
+        const arr = names.map((n,i)=>({id:n, name: manifestData.breeds[n].displayName || n, price: prices[i] || 50}));
+        // override BREEDS
+        window.BREEDS_RUNTIME = arr;
+      }
+    }).catch(err=>{
+      console.warn('manifest load failed', err);
+    });
+  }
+  // start loading manifest (async)
+  loadManifest().finally(()=>{
+    // after manifest attempt, initialize owned/current
+    ownedBreeds = loadOwnedBreeds();
+    currentBreed = loadCurrentBreed();
+    renderAll();
+  });
   // load owned breeds and current breed
   let ownedBreeds = loadOwnedBreeds();
   let currentBreed = loadCurrentBreed();
@@ -92,6 +121,12 @@
   if(monthInput){
     monthInput.addEventListener('change', ()=> renderMonthlyReport());
   }
+
+  // top nav buttons
+  const navShop = el('nav-shop');
+  const navReport = el('nav-report');
+  if(navShop) navShop.addEventListener('click', ()=>{ document.querySelector('.shop-panel').scrollIntoView({behavior:'smooth'}); });
+  if(navReport) navReport.addEventListener('click', ()=>{ document.querySelector('.report-panel').scrollIntoView({behavior:'smooth'}); });
 
   // budget events
   if(setBudgetBtn){
