@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>貓咪記帳小島</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="title">🐾 貓咪記帳小島</div>
+      <div id="top-cat" class="top-cat">😺</div>
+    </header>
+
+    <main class="container">
+      <section class="panel player-panel">
+        <h3>玩家資訊</h3>
+        <div class="stat-row">
+          <div>等級 <strong id="player-level">1</strong></div>
+          <div>Coins <strong id="player-coins">0</strong> 🪙</div>
+        </div>
+        <div class="exp-row">
+          <div class="exp-label">EXP</div>
+          <div class="exp-bar">
+            <div id="exp-fill" class="exp-fill" style="width:0%"></div>
+          </div>
+          <div class="exp-numbers"><span id="current-exp">0</span>/<span id="exp-next">100</span></div>
+        </div>
+        <div class="budget-row">
+          <div>今日/總共花費</div>
+          <div><strong id="today-spent">0</strong> / <strong id="total-spent">0</strong> （預算 <strong id="budget">1000</strong>）</div>
+        </div>
+      </section>
+
+      <section class="panel cat-panel">
+        <div id="cat-image" class="cat-image">😺</div>
+        <div id="cat-mood" class="cat-mood">開心</div>
+        <div id="levelup-msg" class="levelup-msg" aria-live="polite"></div>
+      </section>
+
+      <section class="panel form-panel">
+        <h3>新增支出</h3>
+        <form id="expense-form">
+          <div class="form-row">
+            <label>金額</label>
+            <input id="amount" type="number" min="0" step="0.01" placeholder="0" required />
+          </div>
+          <div class="form-row">
+            <label>類別</label>
+            <select id="category">
+              <option>食品</option>
+              <option>交通</option>
+              <option>娛樂</option>
+              <option>其他</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label>備註</label>
+            <input id="note" type="text" placeholder="例如：午餐、電影" />
+          </div>
+          <div class="form-row form-actions">
+            <button id="add-expense" type="submit">＋ 新增支出</button>
+            <button id="clear-data" type="button" class="ghost">重設資料</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel list-panel">
+        <h3>支出清單</h3>
+        <ul id="expense-list" class="expense-list"></ul>
+      </section>
+    </main>
+
+    <footer class="footer">小提示：每新增一筆支出，貓咪會獲得 EXP，並隨花費比例改變心情唷～</footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
