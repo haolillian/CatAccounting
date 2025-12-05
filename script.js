@@ -125,8 +125,10 @@
   // top nav buttons
   const navShop = el('nav-shop');
   const navReport = el('nav-report');
+  const navHome = el('nav-home');
   if(navShop) navShop.addEventListener('click', ()=> showPage('shop'));
   if(navReport) navReport.addEventListener('click', ()=> showPage('report'));
+  if(navHome) navHome.addEventListener('click', ()=> showPage('home'));
 
   // budget events
   if(setBudgetBtn){
@@ -377,7 +379,14 @@
     const list = getAvailableBreeds();
     list.forEach(b=>{
       const row = document.createElement('div'); row.className='shop-item';
-      const left = document.createElement('div'); left.className='breed-name'; left.textContent = `${b.name} (${b.id})`;
+      const left = document.createElement('div'); left.className='breed-left';
+      const thumb = document.createElement('img'); thumb.className = 'breed-thumb';
+      thumb.alt = b.name;
+      // resolve thumbnail from manifest or fallback
+      thumb.src = getBreedThumbnail(b.id);
+      const nameEl = document.createElement('div'); nameEl.className='breed-name'; nameEl.textContent = b.name;
+      left.appendChild(thumb);
+      left.appendChild(nameEl);
       const right = document.createElement('div'); right.className='breed-actions';
       if(owned.includes(b.id)){
         const sel = document.createElement('button'); sel.textContent = current===b.id ? '使用中' : '選擇'; sel.className='btn-edit';
@@ -399,6 +408,19 @@
       }
       row.appendChild(left); row.appendChild(right); shopListEl.appendChild(row);
     });
+  }
+
+  // helper: return a thumbnail path for a breed id (prefer manifest happy image)
+  function getBreedThumbnail(breedId){
+    if(manifestData && manifestData.breeds && manifestData.breeds[breedId]){
+      const imgs = manifestData.breeds[breedId].images || {};
+      // prefer 'happy' otherwise first available
+      if(imgs.happy) return imgs.happy;
+      const first = Object.values(imgs)[0];
+      if(first) return first;
+    }
+    // fallback naming pattern
+    return `assets/${breedId}_happy.svg`;
   }
 
   // --- Monthly report & Pie chart ---
