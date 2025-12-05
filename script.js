@@ -1,4 +1,4 @@
-// Cat Island - script.js (Final Corrected Version)
+// Cat Island - script.js
 (function(){
   // --- Config ---
   const STORAGE_KEYS = {EXPENSES:'cat_island_expenses', PLAYER:'cat_island_player'};
@@ -15,6 +15,13 @@
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  // --- Helper: Format Full Time ---
+  function formatTime(timestamp){
+    if(!timestamp) return '';
+    const d = new Date(timestamp);
+    return d.toLocaleString('zh-TW', {hour12: false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'});
   }
 
   // budget helper
@@ -37,8 +44,7 @@
     coins:0
   };
 
-  // --- Breeds & Shop (UPDATED TO MATCH MANIFEST JSON KEYS) ---
-  // 修改：這裡的 ID 必須改成中文，與 manifest.json 的 Key 保持一致
+  // --- Breeds ---
   const BREEDS = [
     {id:'無毛貓', name:'無毛貓', price:0},
     {id:'暹羅貓', name:'暹羅貓', price:15},
@@ -93,31 +99,25 @@
       return r.json();
     }).then(json=>{
       manifestData = json;
-      // 雖然我們手動更新了上方的 BREEDS，但這裡還是動態讀取一次以確保價格或其他資訊同步
       const names = Object.keys(manifestData.breeds || {});
       if(names.length > 0){
-        // 價格設定 (依據陣列順序)
         const prices = [0,10,15,20,25,30,40,50];
         const arr = names.map((n,i)=>({
-            id: n, // 使用 JSON 的 key (例如 "無毛貓") 作為 ID
+            id: n,
             name: manifestData.breeds[n].displayName || n, 
             price: prices[i] !== undefined ? prices[i] : 50
         }));
         window.BREEDS_RUNTIME = arr;
       }
-    }).catch(err=>{
-      console.warn('manifest load failed, using default list', err);
-    });
+    }).catch(err=>{});
   }
   
   loadManifest().finally(()=>{
-    // 確保讀取順序：先讀 manifest -> 再確認擁有的貓
     ownedBreeds = loadOwnedBreeds();
     currentBreed = loadCurrentBreed();
     renderAll();
   });
   
-  // 這裡先初始化變數，等 loadManifest 完成後會再更新一次
   let ownedBreeds = loadOwnedBreeds();
   let currentBreed = loadCurrentBreed();
 
@@ -127,12 +127,10 @@
   if(viewDateEl) viewDateEl.value = getLocalToday();
   if(viewAllEl) viewAllEl.checked = false;
   
-  // Listeners
   if(viewDateEl) viewDateEl.addEventListener('change', ()=> renderAll());
   if(viewAllEl) viewAllEl.addEventListener('change', ()=> renderAll());
   if(monthInput) monthInput.addEventListener('change', ()=> renderMonthlyReport());
 
-  // Nav
   const navShop = el('nav-shop');
   const navReport = el('nav-report');
   const navHome = el('nav-home');
@@ -149,31 +147,13 @@
     });
   }
 
-  // --- Owned breeds helpers ---
-  // 修改：預設貓咪 ID 改為 '無毛貓'
   function loadOwnedBreeds(){
-    try{ 
-        const raw = localStorage.getItem(OWNED_KEY); 
-        // 簡單檢查：如果讀出來的是舊的英文 ID (例如 sphynx)，就強制重設
-        if(raw && raw.includes('sphynx')) return ['無毛貓'];
-        return raw ? JSON.parse(raw) : ['無毛貓']; 
-    }catch(e){ return ['無毛貓']; }
+    try{ const raw = localStorage.getItem(OWNED_KEY); if(raw && raw.includes('sphynx')) return ['無毛貓']; return raw ? JSON.parse(raw) : ['無毛貓']; }catch(e){ return ['無毛貓']; }
   }
   function saveOwnedBreeds(list){ localStorage.setItem(OWNED_KEY, JSON.stringify(list)); }
-  
-  function loadCurrentBreed(){ 
-    try{ 
-        const raw = localStorage.getItem(CURRENT_BREED_KEY); 
-        // 同樣檢查舊 ID
-        if(raw === 'sphynx') return '無毛貓';
-        return raw || '無毛貓'; 
-    }catch(e){ return '無毛貓'; } 
-  }
+  function loadCurrentBreed(){ try{ const raw = localStorage.getItem(CURRENT_BREED_KEY); if(raw === 'sphynx') return '無毛貓'; return raw || '無毛貓'; }catch(e){ return '無毛貓'; } }
   function saveCurrentBreed(id){ localStorage.setItem(CURRENT_BREED_KEY, id); }
-
-  function getAvailableBreeds(){
-    return window.BREEDS_RUNTIME || BREEDS;
-  }
+  function getAvailableBreeds(){ return window.BREEDS_RUNTIME || BREEDS; }
 
   // --- Events ---
   expenseForm.addEventListener('submit', (e)=>{
@@ -203,19 +183,21 @@
     renderAll();
   });
 
-  // --- Core Functions ---
-  function loadExpenses(){
-    try{ const raw = localStorage.getItem(STORAGE_KEYS.EXPENSES); return raw ? JSON.parse(raw) : []; }catch(e){return []}
-  }
+  function loadExpenses(){ try{ const raw = localStorage.getItem(STORAGE_KEYS.EXPENSES); return raw ? JSON.parse(raw) : []; }catch(e){return []} }
   function saveExpenses(){ localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses)); }
-  function loadPlayer(){
-    try{ const raw = localStorage.getItem(STORAGE_KEYS.PLAYER); return raw ? JSON.parse(raw) : {...defaultPlayer}; }catch(e){return {...defaultPlayer}}
-  }
+  function loadPlayer(){ try{ const raw = localStorage.getItem(STORAGE_KEYS.PLAYER); return raw ? JSON.parse(raw) : {...defaultPlayer}; }catch(e){return {...defaultPlayer}} }
   function savePlayer(){ localStorage.setItem(STORAGE_KEYS.PLAYER, JSON.stringify(player)); }
 
   function addExpense({amount, category, note, dateVal}){
     const day = dateVal ? dateVal : getLocalToday();
-    const item = {id:Date.now(), amount, category, note, date: day};
+    const item = {
+        id: Date.now(), 
+        amount, 
+        category, 
+        note, 
+        date: day,
+        createdTime: Date.now() // 新增：紀錄當下精確時間
+    };
     expenses.unshift(item);
     saveExpenses();
 
@@ -240,15 +222,9 @@
     renderAll();
   }
 
-  function showLevelUp(){
-    levelupMsg.textContent = `🎉 貓咪升級了！`;
-    setTimeout(()=>{ levelupMsg.textContent = ''; }, 2500);
-  }
+  function showLevelUp(){ levelupMsg.textContent = `🎉 貓咪升級了！`; setTimeout(()=>{ levelupMsg.textContent = ''; }, 2500); }
   function getTotalSpent(){ return expenses.reduce((s,it)=>s+Number(it.amount),0); }
-  function getTodaySpent(){
-    const today = getLocalToday();
-    return expenses.reduce((s,it)=>{ return s + (it.date.slice(0,10)===today ? Number(it.amount) : 0); },0);
-  }
+  function getTodaySpent(){ const today = getLocalToday(); return expenses.reduce((s,it)=>{ return s + (it.date.slice(0,10)===today ? Number(it.amount) : 0); },0); }
   function getMonthlyTotals(month){
     const totals = {}; let totalAll = 0;
     expenses.forEach(it=>{
@@ -259,7 +235,6 @@
     });
     return {totals, totalAll};
   }
-
   function determineMood(total, budget){
     const b = (typeof budget === 'number' && budget > 0) ? budget : BUDGET;
     const ratio = b > 0 ? (total / b) : 0;
@@ -291,19 +266,14 @@
     if(catImage){
       catImage.innerHTML = '';
       const img = document.createElement('img');
-      img.src = appearance.img; 
-      img.alt = 'cat';
-      // 簡單的錯誤處理，如果路徑不對則不顯示，避免破圖標示
+      img.src = appearance.img; img.alt = 'cat';
       img.onerror = function(){ this.style.display='none'; };
       catImage.appendChild(img);
     }
     if(topCat){
       topCat.innerHTML = '';
       if(appearance.accessory){
-        const acc = document.createElement('img');
-        acc.src = appearance.accessory;
-        acc.alt = 'accessory';
-        topCat.appendChild(acc);
+        const acc = document.createElement('img'); acc.src = appearance.accessory; acc.alt = 'accessory'; topCat.appendChild(acc);
       }
     }
 
@@ -323,7 +293,17 @@
         const li = document.createElement('li'); li.className = 'expense-item';
         const meta = document.createElement('div'); meta.className = 'expense-meta';
         const cat = document.createElement('div'); cat.className = 'expense-cat'; cat.textContent = it.category;
-        const note = document.createElement('div'); note.className = 'expense-note'; note.textContent = it.note || new Date(it.date).toLocaleString();
+        
+        // --- 顯示邏輯修改：優先顯示時間 ---
+        let displayNote = it.note;
+        if(!displayNote){
+            if(it.createdTime) displayNote = formatTime(it.createdTime);
+            else displayNote = it.date; 
+        }
+
+        const note = document.createElement('div'); note.className = 'expense-note'; 
+        note.textContent = displayNote;
+
         meta.appendChild(cat); meta.appendChild(note);
         const right = document.createElement('div'); right.className = 'expense-right';
         const amount = document.createElement('div'); amount.className = 'expense-amount'; amount.textContent = '-' + Number(it.amount).toFixed(2);
@@ -337,7 +317,11 @@
       });
     }
     renderShop();
-    renderMonthlyReport();
+    
+    // 確保報表切換時更新
+    if(!document.querySelector('.report-panel').classList.contains('hidden')){
+        renderMonthlyReport();
+    }
   }
 
   function renderShop(){
@@ -380,28 +364,17 @@
     });
   }
 
-  // 修改：根據 JSON 結構與 Key 抓取正確圖片
   function getCatAppearance(breedId, moodKey){
     let img = '';
-    // 先嘗試從 manifestData 讀取 (這是最準確的)
     if(manifestData && manifestData.breeds && manifestData.breeds[breedId]){
       const imgs = manifestData.breeds[breedId].images || {};
-      // 嘗試抓取對應心情，如果沒有則抓第一個
       img = imgs[moodKey] || Object.values(imgs)[0] || '';
     }
-    
-    // 如果 manifest 還沒載入或找不到，才嘗試 fallback (但因為檔名複雜，這裡可能失效，主要依賴 manifest)
     if(!img){ 
-        // 這裡嘗試配合您的全形檔名規則，作為最後手段
-        // 例如：assets/無毛貓＿開心.PNG
-        const moodMap = {
-            'happy': '開心', 'relaxed': '放鬆', 'confused': '疑惑',
-            'surprised': '驚訝', 'sad': '難過', 'angry': '生氣'
-        };
+        const moodMap = {'happy': '開心', 'relaxed': '放鬆', 'confused': '疑惑','surprised': '驚訝', 'sad': '難過', 'angry': '生氣'};
         const cMood = moodMap[moodKey] || '開心';
         img = `assets/${breedId}＿${cMood}.PNG`; 
     }
-
     const lvl = player.level || 1;
     let accessory = '';
     if(lvl >= 8) accessory = 'assets/accessory_sunglasses.svg';
@@ -411,32 +384,35 @@
   }
 
   function getBreedThumbnail(breedId){
-    // 縮圖預設抓 "happy" (開心) 的圖片
     if(manifestData && manifestData.breeds && manifestData.breeds[breedId]){
       const imgs = manifestData.breeds[breedId].images || {};
       if(imgs.happy) return imgs.happy;
       const first = Object.values(imgs)[0];
       if(first) return first;
     }
-    // Fallback
     return `assets/${breedId}＿開心.PNG`;
   }
 
-  // ... (Report Logic & Helpers, same as before) ...
   function renderMonthlyReport(){
     if(!monthInput) return;
     const month = monthInput.value || getLocalToday().slice(0,7);
     const {totals, totalAll} = getMonthlyTotals(month);
     if(monthlyTotalEl) monthlyTotalEl.textContent = totalAll.toFixed(2);
-    drawPieChart(pieCanvas, totals);
+    
+    if(pieCanvas) drawPieChart(pieCanvas, totals);
   }
+
   function drawPieChart(canvas, data){
-    if(!canvas) return;
     const ctx = canvas.getContext('2d');
     const entries = Object.entries(data);
+    
+    // 鎖定尺寸
+    canvas.width = 300; 
+    canvas.height = 200;
+
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if(entries.length===0){
-       ctx.fillStyle = '#ccc'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('無資料', canvas.width/2, canvas.height/2); return;
+       ctx.fillStyle = '#ccc'; ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('本月無資料', canvas.width/2, canvas.height/2); return;
     }
     const total = entries.reduce((s,[k,v])=>s+v,0);
     let start = 0;
@@ -455,6 +431,7 @@
       start = end;
     });
   }
+
   function deleteExpense(id){
     if(!confirm('確定要刪除此筆支出嗎？')) return;
     expenses = expenses.filter(it => it.id !== id);
@@ -516,7 +493,14 @@
       } else {
         const meta = document.createElement('div'); meta.className='expense-meta';
         const cat = document.createElement('div'); cat.className='expense-cat'; cat.textContent=it.category;
-        const note = document.createElement('div'); note.className='expense-note'; note.textContent = it.note || new Date(it.date).toLocaleString();
+        
+        let displayNote = it.note;
+        if(!displayNote){
+            if(it.createdTime) displayNote = formatTime(it.createdTime);
+            else displayNote = it.date; 
+        }
+
+        const note = document.createElement('div'); note.className='expense-note'; note.textContent = displayNote;
         meta.appendChild(cat); meta.appendChild(note);
         const right = document.createElement('div'); right.className='expense-right'; const amount = document.createElement('div'); amount.className='expense-amount'; amount.textContent='-'+Number(it.amount).toFixed(2);
         const actions = document.createElement('div'); actions.className='item-actions'; const editBtn = document.createElement('button'); editBtn.className='btn-edit'; editBtn.textContent='✎'; editBtn.addEventListener('click', ()=> editExpense(it.id)); const delBtn=document.createElement('button'); delBtn.className='btn-delete'; delBtn.textContent='✕'; delBtn.addEventListener('click', ()=> deleteExpense(it.id)); actions.appendChild(editBtn); actions.appendChild(delBtn);
@@ -526,14 +510,23 @@
       expenseList.appendChild(li);
     });
   }
+  
+  // --- 修正報表切換 ---
   function showPage(name){
     const panels = document.querySelectorAll('.panel');
     panels.forEach(p=>{
       const pd = p.getAttribute('data-page');
       if(!pd){ p.classList.toggle('hidden', name !== 'home'); } else { p.classList.toggle('hidden', pd !== name); }
     });
+    
+    // 切換到報表頁面時強制刷新
+    if(name === 'report'){
+        setTimeout(() => renderMonthlyReport(), 50);
+    }
+
     try{ history.replaceState(null, '', name==='home' ? location.pathname : `#${name}`); }catch(e){}
   }
+  
   function initRouting(){
     document.querySelectorAll('.btn-back').forEach(b=> b.addEventListener('click', ()=> showPage('home')));
     const h = location.hash.replace('#','');

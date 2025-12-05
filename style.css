@@ -15,7 +15,7 @@ body{font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto S
 .nav-buttons button{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:6px 10px;border-radius:10px;cursor:pointer}
 .nav-buttons button.ghost{color:var(--muted)}
 
-/* 修改 Container，讓它可以適應不同的面板 */
+/* 這裡保持原本的 grid 設定 */
 .container{display:grid;grid-template-columns:280px 1fr;gap:18px;padding:18px;max-width:1400px;margin:14px auto}
 
 .panel{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 6px 18px rgba(17,17,17,0.04)}
@@ -59,12 +59,14 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
 .expense-amount{font-weight:700;color:#333}
 .footer{max-width:1400px;margin:10px auto;padding:12px;color:var(--muted);text-align:center}
 
+.shop-panel .shop-note{font-size:13px;color:var(--muted);margin-top:8px}
+
 /* --- 重點修改：讓商店和報表跨欄並置中 --- */
 .shop-panel, .report-panel {
-  grid-column: 1 / -1; /* 強制跨越所有欄位 */
+  grid-column: 1 / -1; /* 強制跨滿整行 */
   width: 100%;
-  max-width: 600px;    /* 限制最大寬度，比較好看 */
-  margin: 20px auto;   /* 上下20px，左右自動置中 */
+  max-width: 600px;    /* 限制最大寬度 */
+  margin: 20px auto;   /* 上下 20px，左右自動置中 */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -77,7 +79,6 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
 .shop-item .breed-name{font-weight:700;font-size:16px}
 .shop-item .breed-actions{display:flex;gap:8px}
 
-/* 報表樣式優化 */
 .report-panel canvas{max-width:100%;background:#fff;border-radius:8px;padding:8px;margin-top:20px}
 .report-controls{display:flex;gap:8px;align-items:center; width: 100%; justify-content: center;}
 .monthly-total{margin-top:8px;font-weight:700}
@@ -87,7 +88,6 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
   .cat-image{font-size:68px}
 }
 
-/* Page Helpers */
 .hidden{display:none !important}
 .page-header{display:flex;align-items:center;gap:12px; margin-bottom: 15px; width: 100%;}
 .page-header .btn-back{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:8px}
