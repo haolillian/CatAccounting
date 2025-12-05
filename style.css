@@ -69,3 +69,9 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
   .container{grid-template-columns:1fr;padding:12px}
   .cat-image{font-size:68px}
 }
+
+/* Simple page navigation helpers */
+.hidden{display:none !important}
+.page-header{display:flex;align-items:center;gap:12px}
+.page-header .btn-back{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:6px 8px;border-radius:8px}
+.page-header h3{margin:0}

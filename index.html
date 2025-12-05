@@ -83,20 +83,26 @@
         <ul id="expense-list" class="expense-list"></ul>
       </section>
 
-      <section class="panel shop-panel">
-        <h3>貓咪商店</h3>
+      <section class="panel shop-panel" data-page="shop">
+        <div class="page-header">
+          <button class="btn-back">← 返回</button>
+          <h3>貓咪商店</h3>
+        </div>
         <div id="shop-list"></div>
         <div class="shop-note">使用 Coins 兌換其他貓咪品種</div>
       </section>
 
-      <section class="panel report-panel">
-        <h3>每月報表</h3>
+      <section class="panel report-panel" data-page="report">
+        <div class="page-header">
+          <button class="btn-back">← 返回</button>
+          <h3>每月報表</h3>
+        </div>
         <div class="report-controls">
           <label>選擇月份</label>
           <input id="month-input" type="month" />
         </div>
         <div class="monthly-total">本月總消費：<strong id="monthly-total">0</strong></div>
-        <canvas id="pie-chart" width="300" height="200'></canvas>
+        <canvas id="pie-chart" width="300" height="200"></canvas>
       </section>
     </main>
 

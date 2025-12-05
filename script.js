@@ -125,8 +125,8 @@
   // top nav buttons
   const navShop = el('nav-shop');
   const navReport = el('nav-report');
-  if(navShop) navShop.addEventListener('click', ()=>{ document.querySelector('.shop-panel').scrollIntoView({behavior:'smooth'}); });
-  if(navReport) navReport.addEventListener('click', ()=>{ document.querySelector('.report-panel').scrollIntoView({behavior:'smooth'}); });
+  if(navShop) navShop.addEventListener('click', ()=> showPage('shop'));
+  if(navReport) navReport.addEventListener('click', ()=> showPage('report'));
 
   // budget events
   if(setBudgetBtn){
@@ -142,11 +142,16 @@
 
   // --- Owned breeds helpers ---
   function loadOwnedBreeds(){
-    try{ const raw = localStorage.getItem(OWNED_KEY); return raw ? JSON.parse(raw) : [BREEDS[0].id]; }catch(e){ return [BREEDS[0].id]; }
+    try{ const raw = localStorage.getItem(OWNED_KEY); return raw ? JSON.parse(raw) : [getAvailableBreeds()[0].id]; }catch(e){ return [getAvailableBreeds()[0].id]; }
   }
   function saveOwnedBreeds(list){ localStorage.setItem(OWNED_KEY, JSON.stringify(list)); }
-  function loadCurrentBreed(){ try{ const raw = localStorage.getItem(CURRENT_BREED_KEY); return raw || BREEDS[0].id; }catch(e){ return BREEDS[0].id; } }
+  function loadCurrentBreed(){ try{ const raw = localStorage.getItem(CURRENT_BREED_KEY); return raw || getAvailableBreeds()[0].id; }catch(e){ return getAvailableBreeds()[0].id; } }
   function saveCurrentBreed(id){ localStorage.setItem(CURRENT_BREED_KEY, id); }
+
+  // helper: get available breeds (manifest-driven if present)
+  function getAvailableBreeds(){
+    return window.BREEDS_RUNTIME || BREEDS;
+  }
 
   // --- Events ---
   expenseForm.addEventListener('submit', (e)=>{
@@ -204,22 +209,23 @@
     expenses.unshift(item);
     saveExpenses();
 
-    // update player
+    // update player (EXP & coins)
     const expGain = BASE_EXP + (note ? NOTE_BONUS : 0);
     player.currentExp += expGain;
     player.coins += 1;
+
     // handle level up(s)
+    let leveled = false;
     while(player.currentExp >= player.expToNextLevel){
       player.currentExp -= player.expToNextLevel;
-          const noteInput = document.createElement('input'); noteInput.className='edit-input'; noteInput.value = it.note;
-          const dateEdit = document.createElement('input'); dateEdit.type='date'; dateEdit.className='edit-input'; dateEdit.value = it.date.slice(0,10);
+      player.level = (player.level || 1) + 1;
       player.expToNextLevel = Math.round(player.expToNextLevel * 1.5);
-          meta.appendChild(noteInput);
-          meta.appendChild(dateEdit);
+      leveled = true;
     }
     savePlayer();
+    if(leveled) showLevelUp();
 
-          saveBtn.addEventListener('click', ()=> saveEditedExpense(it.id, amtInput.value, catSelect.value, noteInput.value, dateEdit.value));
+    // update mood & dialogue
     const total = getTotalSpent();
     const mood = determineMood(total, BUDGET);
     const shortMsg = generateDialogueOnExpense(amount, mood, player);
@@ -286,7 +292,7 @@
     const mood = determineMood(total, BUDGET);
     catMood.textContent = mood.m;
     // choose appearance based on current breed and mood
-    const appearance = getCatAppearance(loadCurrentBreed(), mood.key);
+  const appearance = getCatAppearance(loadCurrentBreed(), mood.key);
     // render main cat image using safer DOM operations
     if(catImage){
       catImage.innerHTML = '';
@@ -368,7 +374,8 @@
     shopListEl.innerHTML = '';
     const owned = loadOwnedBreeds();
     const current = loadCurrentBreed();
-    BREEDS.forEach(b=>{
+    const list = getAvailableBreeds();
+    list.forEach(b=>{
       const row = document.createElement('div'); row.className='shop-item';
       const left = document.createElement('div'); left.className='breed-name'; left.textContent = `${b.name} (${b.id})`;
       const right = document.createElement('div'); right.className='breed-actions';
@@ -531,19 +538,50 @@
   // Appearance based on level & mood
   // get image path by breedId and moodKey
   function getCatAppearance(breedId, moodKey){
-    const assets = 'assets/';
-    // moodKey: happy, relaxed, confused, surprised, sad, angry
-    // build filename: {breedId}_{moodKey}.svg
-    const img = `${assets}${breedId}_${moodKey}.svg`;
+    // prefer manifest data when available
+    let img = '';
+    if(manifestData && manifestData.breeds && manifestData.breeds[breedId]){
+      const imgs = manifestData.breeds[breedId].images || {};
+      img = imgs[moodKey] || Object.values(imgs)[0] || '';
+    }
+    // fallback to conventional path
+    if(!img){ img = `assets/${breedId}_${moodKey}.svg`; }
 
     // accessory by player level (load player from saved state)
     const lvl = player.level || 1;
     let accessory = '';
-    if(lvl >= 8) accessory = assets + 'accessory_sunglasses.svg';
-    else if(lvl >=5) accessory = assets + 'accessory_bow.svg';
-    else if(lvl >=3) accessory = assets + 'accessory_cap.svg';
+    if(lvl >= 8) accessory = 'assets/accessory_sunglasses.svg';
+    else if(lvl >=5) accessory = 'assets/accessory_bow.svg';
+    else if(lvl >=3) accessory = 'assets/accessory_cap.svg';
 
     return {img, accessory};
   }
+
+  // Simple single-page navigation: show only panels for a named page
+  function showPage(name){
+    const panels = document.querySelectorAll('.panel');
+    panels.forEach(p=>{
+      const pd = p.getAttribute('data-page');
+      if(!pd){
+        // panels without data-page are considered part of "home"
+        p.classList.toggle('hidden', name !== 'home');
+      } else {
+        p.classList.toggle('hidden', pd !== name);
+      }
+    });
+    // update hash for deep-link
+    try{ history.replaceState(null, '', name==='home' ? location.pathname : `#${name}`); }catch(e){}
+  }
+
+  // on load: wire back buttons and initial route
+  function initRouting(){
+    document.querySelectorAll('.btn-back').forEach(b=> b.addEventListener('click', ()=> showPage('home')));
+    // initial route from hash
+    const h = location.hash.replace('#','');
+    if(h==='shop' || h==='report') showPage(h); else showPage('home');
+  }
+  // attach and run immediately
+  document.addEventListener('DOMContentLoaded', initRouting);
+  initRouting();
 
 })();
