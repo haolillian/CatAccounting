@@ -53,6 +53,15 @@ button.ghost{background:transparent;color:var(--muted);border:1px solid rgba(0,0
 .expense-amount{font-weight:700;color:#333}
 .footer{max-width:1000px;margin:10px auto;padding:12px;color:var(--muted);text-align:center}
 
+.shop-panel .shop-note{font-size:13px;color:var(--muted);margin-top:8px}
+.shop-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:#fffaf2}
+.shop-item .breed-name{font-weight:700}
+.shop-item .breed-actions{display:flex;gap:8px}
+
+.report-panel canvas{max-width:100%;background:#fff;border-radius:8px;padding:8px;margin-top:8px}
+.report-controls{display:flex;gap:8px;align-items:center}
+.monthly-total{margin-top:8px;font-weight:700}
+
 @media (max-width:820px){
   .container{grid-template-columns:1fr;padding:12px}
   .cat-image{font-size:68px}
