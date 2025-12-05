@@ -2,9 +2,26 @@
 (function(){
   // --- Config ---
   const STORAGE_KEYS = {EXPENSES:'cat_island_expenses', PLAYER:'cat_island_player'};
-  const BUDGET = 1000; // 可修改預設預算
+  const BUDGET_KEY = 'cat_island_budget';
   const BASE_EXP = 5;
   const NOTE_BONUS = 2;
+
+  // budget helper
+  function loadBudget(){
+    try{
+      const raw = localStorage.getItem(BUDGET_KEY);
+      return raw ? Number(raw) : 1000;
+    }catch(e){
+      return 1000;
+    }
+  }
+  function saveBudget(val){
+    localStorage.setItem(BUDGET_KEY, String(val));
+    BUDGET = Number(val);
+    if(budgetEl) budgetEl.textContent = BUDGET;
+    renderAll();
+  }
+  let BUDGET = loadBudget(); // 可修改預設預算
 
   // --- Default player ---
   const defaultPlayer = {
@@ -40,9 +57,23 @@
   const clearBtn = el('clear-data');
 
   // --- Init ---
-  budgetEl.textContent = BUDGET;
+  if(budgetEl) budgetEl.textContent = BUDGET;
+  const budgetInput = el('budget-input');
+  const setBudgetBtn = el('set-budget');
   expenses = loadExpenses();
   renderAll();
+
+  // budget events
+  if(setBudgetBtn){
+    setBudgetBtn.addEventListener('click', ()=>{
+      const v = Number(budgetInput.value);
+      if(!v || v <= 0){
+        return alert('請輸入正確的預算（數字，大於 0）');
+      }
+      saveBudget(v);
+      budgetInput.value = '';
+    });
+  }
 
   // --- Events ---
   expenseForm.addEventListener('submit', (e)=>{
@@ -122,9 +153,10 @@
     return expenses.reduce((s,it)=>{ return s + (it.date.slice(0,10)===today ? Number(it.amount) : 0); },0);
   }
 
-  function determineMood(total){
-    if(total / BUDGET < 0.5) return {m:'開心', emoji:'😺'};
-    if(total / BUDGET <= 1) return {m:'普通 / 擔心', emoji:'😿'};
+  function determineMood(total, budget){
+    const b = (typeof budget === 'number' && budget > 0) ? budget : BUDGET;
+    if(total / b < 0.5) return {m:'開心', emoji:'😺'};
+    if(total / b <= 1) return {m:'普通 / 擔心', emoji:'😿'};
     return {m:'生氣', emoji:'😾'};
   }
 
@@ -138,13 +170,13 @@
     expFill.style.width = fillPct + '%';
 
     // spending
-    const total = getTotalSpent();
+  const total = getTotalSpent();
     const today = getTodaySpent();
     totalSpentEl.textContent = total.toFixed(2);
     todaySpentEl.textContent = today.toFixed(2);
 
-    // mood & cat image
-    const mood = determineMood(total);
+  // mood & cat image (use editable BUDGET)
+  const mood = determineMood(total, BUDGET);
     catMood.textContent = mood.m;
     catImage.textContent = mood.emoji;
     topCat.textContent = mood.emoji;
