@@ -209,12 +209,9 @@
 
   function addExpense({amount, category, note, dateVal}){
     // dateVal is YYYY-MM-DD or null
-    let isoDate = new Date().toISOString();
-    if(dateVal){
-      const d = new Date(dateVal + 'T00:00:00');
-      isoDate = d.toISOString();
-    }
-    const item = {id:Date.now(), amount, category, note, date:isoDate};
+    // Store date as local YYYY-MM-DD string to avoid timezone shifts when using toISOString()
+    const day = dateVal ? dateVal : new Date().toISOString().slice(0,10);
+    const item = {id:Date.now(), amount, category, note, date: day};
     expenses.unshift(item);
     saveExpenses();
 
@@ -491,8 +488,8 @@
     expenses[idx].category = newCategory;
     expenses[idx].note = newNote;
       if(arguments[4]){
-        const d = new Date(arguments[4] + 'T00:00:00');
-        expenses[idx].date = d.toISOString();
+        // expecting a YYYY-MM-DD value from the edit date input; store as-is to avoid TZ issues
+        expenses[idx].date = arguments[4];
       }
     saveExpenses();
     renderAll();
